@@ -182,6 +182,15 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     commit_msg="updated at ${LATEST_DATE:-unknown date}"
     if git commit -m "$commit_msg"; then
       echo "GitHub 用のコミットを作成しました: $commit_msg"
+      current_branch="$(git rev-parse --abbrev-ref HEAD)"
+      remote_name="$(git config branch."$current_branch".remote || echo origin)"
+      echo "GitHub (${remote_name}/${current_branch}) へ push 中..."
+      if git push "$remote_name" "$current_branch"; then
+        echo "GitHub への push が完了しました。"
+      else
+        echo "git push に失敗しました。手動で確認してください。" >&2
+        exit 1
+      fi
     else
       echo "git commit に失敗しました。" >&2
       exit 1
