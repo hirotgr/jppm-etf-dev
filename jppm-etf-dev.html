@@ -105,7 +105,7 @@
     </section>
 
     <footer>
-      <div><a href="https://github.com/hirotgr/jppm-etf-dev" target="_blank">jppm-etf-dev</a> version 0.1.0 : created by GPT-5.1-Codex with <a href="https://x.com/_hirotgr" target="_blank" rel="noopener noreferrer">@_hirotgr</a>.</div>
+      <div><a href="https://github.com/hirotgr/jppm-etf-dev" target="_blank">jppm-etf-dev</a> version 0.1.2 : created by GPT-5.1-Codex with <a href="https://x.com/_hirotgr" target="_blank" rel="noopener noreferrer">@_hirotgr</a>.</div>
       <div>powered by <a href="https://jp.tradingview.com/lightweight-charts/" target="_blank" rel="noopener noreferrer">Lightweight Charts™︎ (©TradingView)</a>, License: Apache2.0 (see LICENSE and NOTICE on <a href="https://github.com/tradingview/lightweight-charts" target="_blank" rel="noopener noreferrer">GitHub</a>).</div>
     </footer>
   </div>
@@ -438,6 +438,16 @@
       state.syncReady = false;
       state.priceSeries.setData(priceData);
       state.navSeries.setData(navData);
+      if (devData.length) {
+        const lastPoint = devData[devData.length - 1];
+        const dummyTime = lastPoint.time + 24 * 60 * 60;
+        devData.push({
+          time: dummyTime,
+          value: 0,
+          color: 'rgba(0,0,0,0)',
+          barWidth: 0,
+        });
+      }
       state.devSeries.setData(devData);
       SMA_PERIODS.forEach(period => {
         const smaData = computeSMA(navData, period);
@@ -451,13 +461,16 @@
     function setInitialRange(priceData){
       if (!priceData.length) return;
       const last = priceData[priceData.length - 1].time;
+      const extraDays = 1;
+      const extraSeconds = extraDays * 24 * 60 * 60;
+      const lastExtended = last + extraSeconds;
       const yearAgo = last - 365 * 24 * 60 * 60;
       state.initialRange = {
         from: priceData[0].time,
-        to: last,
+        to: lastExtended,
       };
       const firstCandidate = priceData.find(point => point.time >= yearAgo) || priceData[0];
-      const range = { from: firstCandidate.time, to: last };
+      const range = { from: firstCandidate.time, to: lastExtended };
       applyRange(range);
       state.syncReady = true;
     }
