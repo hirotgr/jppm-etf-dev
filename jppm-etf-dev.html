@@ -60,9 +60,12 @@
     .help-btn:hover{background:#1b2738;border-color:#3a4960}
     .modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:9999}
     .modal.open{display:flex}
-    .modal-panel{width:min(520px,92vw);background:var(--panel);border-radius:12px;border:1px solid #2a3443;box-shadow:0 12px 30px rgba(0,0,0,.4);padding:16px;display:flex;flex-direction:column;gap:12px}
-    .modal-panel h2{margin:0;font-size:16px}
-    .modal-panel button{align-self:flex-end;border:1px solid #2a3443;background:#152033;color:var(--text);border-radius:8px;padding:6px 12px;cursor:pointer}
+    .modal-panel{width:min(520px,92vw);max-height:90vh;background:var(--panel);border-radius:12px;border:1px solid #2a3443;box-shadow:0 12px 30px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #2a3443;background:#0f141c}
+    .modal-header h2{margin:0;font-size:16px}
+    .modal-close-btn{border:1px solid #2a3443;background:#152033;color:var(--text);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer}
+    .modal-close-btn:hover{background:#1b2738;border-color:#3a4960}
+    .modal-content{padding:16px;overflow:auto;display:flex;flex-direction:column;gap:12px}
   </style>
 </head>
 <body>
@@ -105,14 +108,18 @@
     </section>
 
     <footer>
-      <div><a href="https://github.com/hirotgr/jppm-etf-dev" target="_blank">jppm-etf-dev</a> version 0.1.2 : created by GPT-5.1-Codex with <a href="https://x.com/_hirotgr" target="_blank" rel="noopener noreferrer">@_hirotgr</a>.</div>
+      <div><a href="https://github.com/hirotgr/jppm-etf-dev" target="_blank">jppm-etf-dev</a> version 0.1.3 : created by GPT-5.1-Codex with <a href="https://x.com/_hirotgr" target="_blank" rel="noopener noreferrer">@_hirotgr</a>.</div>
       <div>powered by <a href="https://jp.tradingview.com/lightweight-charts/" target="_blank" rel="noopener noreferrer">Lightweight Charts™︎ (©TradingView)</a>, License: Apache2.0 (see LICENSE and NOTICE on <a href="https://github.com/tradingview/lightweight-charts" target="_blank" rel="noopener noreferrer">GitHub</a>).</div>
     </footer>
   </div>
 
   <div id="helpModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
     <div class="modal-panel">
-      <h2 id="helpTitle">概要</h2>
+      <div class="modal-header">
+        <h2 id="helpTitle">概要</h2>
+        <button type="button" id="helpClose" class="modal-close-btn">閉じる</button>
+      </div>
+      <div class="modal-content">
       <p>このツールでは三菱UFJ信託銀行の国内現物保管型貴金属ETF(The Japan Physical Precious Metals ETF)である金の果実シリーズ: 1540.T, 1541.T, 1542.T, 1543.T の市場価格(東証終値)と理論価額(基準価額)の乖離をチャートとして確認できます。<br>データ更新は気が向いた時にやります。</p>
       <p>三菱UFJ信託銀行 金の果実シリーズ<a href="https://kikinzoku.tr.mufg.jp/ja/index.html" target="_blank">https://kikinzoku.tr.mufg.jp/ja/index.html</a></p>
       <h2>使い方</h2>
@@ -144,10 +151,7 @@
           </li>
         </ul>
         <ul>
-
-
-
-      <button type="button" id="helpClose">閉じる</button>
+      </div>
     </div>
   </div>
 
@@ -203,7 +207,7 @@
     const tableBody = document.getElementById('latestTable');
     const lastUpdatedEl = document.getElementById('lastUpdated');
     const priceContainer = document.getElementById('priceChart');
-    const devContainer = document.getElementById('devChart');
+const devContainer = document.getElementById('devChart');
     let topTooltip;
     let bottomTooltip;
 
