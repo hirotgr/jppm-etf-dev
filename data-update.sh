@@ -12,7 +12,6 @@ METAL_SOURCES=(
 )
 
 # ヒストリカルデータのダウンロード
-mkdir -p "$DATA_DIR"
 
 for entry in "${METAL_SOURCES[@]}"; do
   metal="${entry%%|*}"
