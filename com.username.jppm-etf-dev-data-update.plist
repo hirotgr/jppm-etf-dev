@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+ "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.username.jppm-etf-dev-data-update</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/username/scripts/jppm-etf-dev-data-update.sh</string>
+    </array>
+
+    <key>StartCalendarInterval</key>
+    <array> <!-- 平日(integer=[2-6]) 18:00に実行 -->
+        <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>18</integer><key>Minute</key><integer>00</integer></dict>
+        <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>18</integer><key>Minute</key><integer>00</integer></dict>
+        <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>18</integer><key>Minute</key><integer>00</integer></dict>
+        <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>18</integer><key>Minute</key><integer>00</integer></dict>
+        <dict><key>Weekday</key><integer>6</integer><key>Hour</key><integer>18</integer><key>Minute</key><integer>00</integer></dict>
+    </array>
+
+    <!-- stdout, stderrをログに保存 (不要ならコメントアウト) -->
+    <key>StandardOutPath</key>
+    <string>/tmp/jppm-etf-dev-data-update.out</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/jppm-etf-dev-data-update.err</string>
+</dict>
+</plist>

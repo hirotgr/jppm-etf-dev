@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DATA_DIR="."
+# データファイルを置くディレクトリ
+DATA_DIR="/Users/username/git/jppm-etf-dev"
+# ファイル名を変数として定義
+DATA_FILE="jppm-etf-dev.csv"
+
+cd "$DATA_DIR"
 
 # ヒストリカルデータのURL
 METAL_SOURCES=(
@@ -27,11 +32,11 @@ for entry in "${METAL_SOURCES[@]}"; do
   rm "$zip_path"
 done
 
-# jppm-etf.csvの最終更新日を取得
-JPPM_FILE="${DATA_DIR}/jppm-etf.csv"
+# データファイルの絶対パス (既存であることが前提)
+JPPM_FILE="${DATA_DIR}/${DATA_FILE}"
 
 if [[ ! -f "$JPPM_FILE" ]]; then
-  echo "jppm-etf.csv が見つかりません: $JPPM_FILE" >&2
+  echo "${DATA_FILE} が見つかりません: $JPPM_FILE" >&2
   exit 1
 fi
 
@@ -39,9 +44,9 @@ LAST_DATE="$(tail -n 1 "$JPPM_FILE" | awk -F, 'NF {print $1}')"
 if [[ ! "$LAST_DATE" =~ ^[0-9]{4}/[0-9]{1,2}/[0-9]{1,2}$ ]]; then
   LAST_DATE=""
 fi
-echo "jppm-etf.csv の最終日付: ${LAST_DATE:-N/A}"
+echo "${DATA_FILE} の最終日付: ${LAST_DATE:-N/A}"
 
-# 各メタルの CSV から最新20行をまとめて抽出し、ETF CSV に追記する行を生成
+# 各メタルのCSVから最新20行をまとめて抽出し、ETF CSVに追記する行を生成
 # 20営業日以上データ更新しないと動かなくなるのは仕様上の制限
 NEW_ROWS="$(
 LAST_DATE="$LAST_DATE" DATA_DIR="$DATA_DIR" python3 <<'PY'
@@ -155,13 +160,13 @@ sys.stdout.write("\n".join(output_lines))
 PY
 )"
 
-# NEW_ROWSをjppm-etf.csvにappend
+# NEW_ROWSをCSVにappend
 NEW_ROWS="${NEW_ROWS%$'\n'}"
 
 if [[ -n "$NEW_ROWS" ]]; then
   printf "%s\n" "$NEW_ROWS" >> "$JPPM_FILE"
   appended_count="$(printf "%s" "$NEW_ROWS" | grep -c '^')"
-  echo "jppm-etf.csv に ${appended_count} 行を追記しました。"
+  echo "${DATA_FILE} に ${appended_count} 行を追記しました。"
 else
   echo "追記対象の行はありません。"
 fi
@@ -175,7 +180,7 @@ fi
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   status_output="$(git status --short -- "$JPPM_FILE")"
   if [[ -z "$status_output" ]]; then
-    echo "jppm-etf.csv に変更はありません。コミットは行いません。"
+    echo "${DATA_FILE} に変更はありません。コミットは行いません。"
   else
     git add "$JPPM_FILE"
     commit_msg="updated at ${LATEST_DATE:-unknown date}"
@@ -200,7 +205,7 @@ else
 fi
 
 # ダウンロードしたヒストリカルデータを削除
-rm gold.csv
-rm platinum.csv
-rm silver.csv
-rm palladium.csv
+for entry in "${METAL_SOURCES[@]}"; do
+  metal="${entry%%|*}"
+  rm "${metal}.csv"
+done
