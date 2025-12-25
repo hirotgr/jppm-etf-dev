@@ -108,7 +108,7 @@
     </section>
 
     <footer>
-      <div><a href="https://github.com/hirotgr/jppm-etf-dev" target="_blank">jppm-etf-dev</a> version 0.1.3 : created by GPT-5.1-Codex with <a href="https://x.com/_hirotgr" target="_blank" rel="noopener noreferrer">@_hirotgr</a>.</div>
+      <div><a href="https://github.com/hirotgr/jppm-etf-dev" target="_blank">jppm-etf-dev</a> version 0.1.4 : created by GPT-5.1-Codex with <a href="https://x.com/_hirotgr" target="_blank" rel="noopener noreferrer">@_hirotgr</a>.</div>
       <div>powered by <a href="https://jp.tradingview.com/lightweight-charts/" target="_blank" rel="noopener noreferrer">Lightweight Charts™︎ (©TradingView)</a>, License: Apache2.0 (see LICENSE and NOTICE on <a href="https://github.com/tradingview/lightweight-charts" target="_blank" rel="noopener noreferrer">GitHub</a>).</div>
     </footer>
   </div>
@@ -720,8 +720,8 @@ const devContainer = document.getElementById('devChart');
 
     async function loadData(){
       try {
-        setStatus('jppm-etf.csv を取得中...');
-        const res = await fetch('jppm-etf.csv', { cache: 'no-store' });
+        setStatus('jppm-etf-dev.csv を取得中...');
+        const res = await fetch('jppm-etf-dev.csv', { cache: 'no-store' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const text = await res.text();
         const rows = parseCSV(text);
