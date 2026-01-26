@@ -174,21 +174,25 @@ PY
 # NEW_ROWSをCSVにappend
 NEW_ROWS="${NEW_ROWS%$'\n'}"
 
+appended=0
 if [[ -n "$NEW_ROWS" ]]; then
   printf "%s\n" "$NEW_ROWS" >> "$JPPM_FILE"
   appended_count="$(printf "%s" "$NEW_ROWS" | grep -c '^')"
   echo "${DATA_FILE} に ${appended_count} 行を追記しました。"
+appended=1
 else
   echo "追記対象の行はありません。"
 fi
 
-# CSVを難読化してobfを更新
-if [[ -f "$OBF_SCRIPT" ]]; then
-  python3 "$OBF_SCRIPT" --input "$JPPM_FILE" --output "$OBF_PATH" --key "$OBF_KEY"
-  echo "${OBF_FILE} を更新しました。"
-else
-  echo "難読化スクリプトが見つかりません: $OBF_SCRIPT" >&2
-  exit 1
+# CSVを難読化してobfを更新（追記があった場合のみ）
+if [[ "$appended" -eq 1 ]]; then
+  if [[ -f "$OBF_SCRIPT" ]]; then
+    python3 "$OBF_SCRIPT" --input "$JPPM_FILE" --output "$OBF_PATH" --key "$OBF_KEY"
+    echo "${OBF_FILE} を更新しました。"
+  else
+    echo "難読化スクリプトが見つかりません: $OBF_SCRIPT" >&2
+    exit 1
+  fi
 fi
 
 # GitHubへのcommit
@@ -198,12 +202,12 @@ if [[ ! "$LATEST_DATE" =~ ^[0-9]{4}/[0-9]{1,2}/[0-9]{1,2}$ ]]; then
 fi
 
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  status_output="$(git status --short -- "$JPPM_FILE" "$OBF_PATH")"
+  status_output="$(git status --short -- "$OBF_PATH")"
   if [[ -z "$status_output" ]]; then
-    echo "${DATA_FILE} / ${OBF_FILE} に変更はありません。コミットは行いません。"
+    echo "${OBF_FILE} に変更はありません。コミットは行いません。"
     retry=1
   else
-    git add "$JPPM_FILE" "$OBF_PATH"
+    git add "$OBF_PATH"
     commit_msg="updated at ${LATEST_DATE:-unknown date}"
     if git commit -m "$commit_msg"; then
       echo "GitHub 用のコミットを作成しました: $commit_msg"
