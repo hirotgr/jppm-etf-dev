@@ -108,7 +108,7 @@
     </section>
 
     <footer>
-      <div><a href="https://github.com/hirotgr/jppm-etf-dev" target="_blank">jppm-etf-dev</a> version 0.1.6 : created by GPT-5.1-Codex with <a href="https://x.com/_hirotgr" target="_blank" rel="noopener noreferrer">@_hirotgr</a>.</div>
+      <div><a href="https://github.com/hirotgr/jppm-etf-dev" target="_blank">jppm-etf-dev</a> version 0.1.7 : created by GPT-5.1-Codex with <a href="https://x.com/_hirotgr" target="_blank" rel="noopener noreferrer">@_hirotgr</a>.</div>
       <div>powered by <a href="https://jp.tradingview.com/lightweight-charts/" target="_blank" rel="noopener noreferrer">Lightweight Charts™︎ (©TradingView)</a>, License: Apache2.0 (see LICENSE and NOTICE on <a href="https://github.com/tradingview/lightweight-charts" target="_blank" rel="noopener noreferrer">GitHub</a>).</div>
     </footer>
   </div>
@@ -169,6 +169,8 @@
       nav: { '1540': '1540-nav', '1541': '1541-nav', '1542': '1542-nav', '1543': '1543-nav' },
       dev: { '1540': '1540-dev', '1541': '1541-dev', '1542': '1542-dev', '1543': '1543-dev' },
     };
+    const OBF_FILE = 'jppm-etf-dev.obf';
+    const OBF_KEY = 'hirotgr';
 
     const SMA_PERIODS = [20, 50, 100, 200];
     const SMA_COLORS = {
@@ -215,6 +217,32 @@ const devContainer = document.getElementById('devChart');
 
     function setStatus(msg){
       statusEl.textContent = msg;
+    }
+
+    function base64ToBytes(text){
+      const clean = text.replace(/\s+/g, '');
+      const binary = atob(clean);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++){
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes;
+    }
+
+    function xorBytes(bytes, key){
+      if (!key) throw new Error('XOR key is empty');
+      const keyBytes = new TextEncoder().encode(key);
+      const out = new Uint8Array(bytes.length);
+      for (let i = 0; i < bytes.length; i++){
+        out[i] = bytes[i] ^ keyBytes[i % keyBytes.length];
+      }
+      return out;
+    }
+
+    function decodeObf(text, key){
+      const bytes = base64ToBytes(text);
+      const decoded = xorBytes(bytes, key);
+      return new TextDecoder('utf-8').decode(decoded);
     }
 
     function parseCSV(text){
@@ -722,11 +750,12 @@ const devContainer = document.getElementById('devChart');
 
     async function loadData(){
       try {
-        setStatus('jppm-etf-dev.csv を取得中...');
-        const res = await fetch('jppm-etf-dev.csv', { cache: 'no-store' });
+        setStatus('jppm-etf-dev.obf を取得中...');
+        const res = await fetch(OBF_FILE, { cache: 'no-store' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const text = await res.text();
-        const rows = parseCSV(text);
+        const csvText = decodeObf(text, OBF_KEY);
+        const rows = parseCSV(csvText);
         if (!rows.length) throw new Error('CSVにデータがありません');
         rows.forEach(row => { row.__time = toUTC(row.Date); });
         state.rows = rows.filter(r => r.__time != null);

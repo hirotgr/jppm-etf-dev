@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+RETRY_WAIT_SEC=1800
+MAX_RETRY=1
+retry_count=0
+
 # データファイルを置くディレクトリ
-DATA_DIR="/Users/username/git/jppm-etf-dev"
+DATA_DIR="./"
 # ファイル名を変数として定義
 DATA_FILE="jppm-etf-dev.csv"
+OBF_FILE="jppm-etf-dev.obf"
+OBF_KEY="hirotgr"
+OBF_SCRIPT="jppm-etf-dev-obfuscate.py"
 
 cd "$DATA_DIR"
 
@@ -15,6 +22,9 @@ METAL_SOURCES=(
   "silver|https://kikinzoku.tr.mufg.jp/ja/data_report/historicaldata/main/02/teaserItems1/0/linkList/0/link/silver.zip"
   "palladium|https://kikinzoku.tr.mufg.jp/ja/data_report/historicaldata/main/02/teaserItems2/0/linkList/0/link/palladium.zip"
 )
+
+while true; do
+  retry=0
 
 # ヒストリカルデータのダウンロード
 
@@ -34,6 +44,7 @@ done
 
 # データファイルの絶対パス (既存であることが前提)
 JPPM_FILE="${DATA_DIR}/${DATA_FILE}"
+OBF_PATH="${DATA_DIR}/${OBF_FILE}"
 
 if [[ ! -f "$JPPM_FILE" ]]; then
   echo "${DATA_FILE} が見つかりません: $JPPM_FILE" >&2
@@ -171,6 +182,15 @@ else
   echo "追記対象の行はありません。"
 fi
 
+# CSVを難読化してobfを更新
+if [[ -f "$OBF_SCRIPT" ]]; then
+  python3 "$OBF_SCRIPT" --input "$JPPM_FILE" --output "$OBF_PATH" --key "$OBF_KEY"
+  echo "${OBF_FILE} を更新しました。"
+else
+  echo "難読化スクリプトが見つかりません: $OBF_SCRIPT" >&2
+  exit 1
+fi
+
 # GitHubへのcommit
 LATEST_DATE="$(tail -n 1 "$JPPM_FILE" | awk -F, 'NF {print $1}')"
 if [[ ! "$LATEST_DATE" =~ ^[0-9]{4}/[0-9]{1,2}/[0-9]{1,2}$ ]]; then
@@ -178,11 +198,12 @@ if [[ ! "$LATEST_DATE" =~ ^[0-9]{4}/[0-9]{1,2}/[0-9]{1,2}$ ]]; then
 fi
 
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  status_output="$(git status --short -- "$JPPM_FILE")"
+  status_output="$(git status --short -- "$JPPM_FILE" "$OBF_PATH")"
   if [[ -z "$status_output" ]]; then
-    echo "${DATA_FILE} に変更はありません。コミットは行いません。"
+    echo "${DATA_FILE} / ${OBF_FILE} に変更はありません。コミットは行いません。"
+    retry=1
   else
-    git add "$JPPM_FILE"
+    git add "$JPPM_FILE" "$OBF_PATH"
     commit_msg="updated at ${LATEST_DATE:-unknown date}"
     if git commit -m "$commit_msg"; then
       echo "GitHub 用のコミットを作成しました: $commit_msg"
@@ -208,4 +229,14 @@ fi
 for entry in "${METAL_SOURCES[@]}"; do
   metal="${entry%%|*}"
   rm "${metal}.csv"
+done
+
+if [[ "$retry" -eq 1 && "$retry_count" -lt "$MAX_RETRY" ]]; then
+  retry_count=$((retry_count + 1))
+  echo "30分待機して再実行します。"
+  sleep "$RETRY_WAIT_SEC"
+  continue
+fi
+
+break
 done
