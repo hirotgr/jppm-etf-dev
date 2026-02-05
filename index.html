@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>金の果実シリーズ 乖離率チャート</title>
+  <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#0b0f14; --panel:#111720; --text:#e8eef6; --muted:#9fb0c3; --accent:#6aa0ff; }
+    *{box-sizing:border-box}
+    body{margin:0 10px;padding:16px;background:var(--bg);color:var(--text);font-family:'Noto Sans JP',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial}
+    a{color:#6aa0ff;text-decoration:none}
+    .wrap{max-width:1100px;margin:0 auto}
+    header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    header h1{font-size:20px;margin:0;font-weight:600}
+    .panel{background:var(--panel);border-radius:12px;padding:16px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+    .top-panel{margin-bottom:16px}
+    .top-grid{display:grid;grid-template-columns:1fr;gap:12px}
+    @media (min-width:720px){.top-grid{grid-template-columns:1fr .9fr}}
+    .latest-meta{font-size:14px;margin-bottom:8px;color:var(--muted)}
+    table{width:100%;border-collapse:collapse;font-size:15px}
+    th,td{border:1px solid #2a3443;padding:6px 8px;text-align:center}
+    th{background:#0f141c;font-weight:600}
+    .symbol-btn{width:100%;border:none;background:#152033;color:var(--text);padding:6px;border-radius:6px;font-size:14px;cursor:pointer;transition:background .15s ease,border .15s ease;white-space:nowrap}
+    .symbol-btn.active{background:#1f2b3e;border:1px solid var(--accent)}
+    .status-card{font-size:13px;color:var(--muted)}
+    .charts{
+      display:grid;
+      grid-template-rows:1fr auto;
+      gap:8px;
+      margin-top:12px;
+      resize:both;
+      overflow:hidden;
+      min-width:320px;
+      min-height:360px;
+      padding-right:14px;
+      padding-bottom:14px;
+      box-sizing:border-box;
+    }
+    #priceChart,#devChart{
+      min-height:220px;
+      height:420px;
+      width:100%;
+      min-width:320px;
+      resize:vertical;
+      overflow:hidden;
+      padding-bottom:20px;
+      box-sizing:border-box;
+      position:relative;
+    }
+    #priceChart>div,#devChart>div{overflow:visible!important}
+    #devChart{height:240px}
+    .chart-tooltip{position:absolute;display:none;pointer-events:none;background:#0f141c;color:var(--text);border:1px solid #2a3443;border-radius:8px;padding:6px 10px;font-size:12px;box-shadow:0 6px 18px rgba(0,0,0,.35);min-width:110px;z-index:50}
+    .chart-tooltip .date{font-weight:600;font-size:12px;margin-bottom:4px}
+    .chart-tooltip .value{display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .chart-tooltip .swatch{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:6px}
+    footer{margin-top:24px;text-align:center;color:#9fb0c3;font-size:12px}
+    .help-btn{margin-left:auto;border:1px solid #2a3443;background:#152033;color:var(--text);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer}
+    .help-btn:hover{background:#1b2738;border-color:#3a4960}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:9999}
+    .modal.open{display:flex}
+    .modal-panel{width:min(520px,92vw);max-height:90vh;background:var(--panel);border-radius:12px;border:1px solid #2a3443;box-shadow:0 12px 30px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #2a3443;background:#0f141c}
+    .modal-header h2{margin:0;font-size:16px}
+    .modal-close-btn{border:1px solid #2a3443;background:#152033;color:var(--text);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer}
+    .modal-close-btn:hover{background:#1b2738;border-color:#3a4960}
+    .modal-content{padding:16px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1><a href="https://kikinzoku.tr.mufg.jp/ja/index.html" target="_blank" rel="noopener noreferrer">金の果実シリーズ</a> 乖離率チャート</h1>
+      <button id="helpBtn" class="help-btn" type="button">ヘルプ</button>
+    </header>
+
+    <section class="panel top-panel">
+      <div class="top-grid">
+        <div>
+          <div id="lastUpdated" class="latest-meta">読み込み中...</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:40%">銘柄</th>
+                  <th>東証終値</th>
+                  <th>理論価額</th>
+                  <th>乖離率</th>
+                </tr>
+              </thead>
+              <tbody id="latestTable">
+                <tr><td colspan="4" style="text-align:center;color:var(--muted)">データ読込中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel status-card">
+          <div style="font-size:14px;margin-bottom:6px;color:var(--text)">状態</div>
+          <div id="status">データ取得を待機中...</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="charts">
+      <div id="priceChart" class="panel" aria-label="ETF 価額チャート"></div>
+      <div id="devChart" class="panel" aria-label="ETF 乖離率チャート"></div>
+    </section>
+
+    <footer>
+      <div><a href="https://github.com/hirotgr/jppm-etf-dev" target="_blank">jppm-etf-dev</a> version 0.1.7 : created by GPT-5.1-Codex with <a href="https://x.com/_hirotgr" target="_blank" rel="noopener noreferrer">@_hirotgr</a>.</div>
+      <div>powered by <a href="https://jp.tradingview.com/lightweight-charts/" target="_blank" rel="noopener noreferrer">Lightweight Charts™︎ (©TradingView)</a>, License: Apache2.0 (see LICENSE and NOTICE on <a href="https://github.com/tradingview/lightweight-charts" target="_blank" rel="noopener noreferrer">GitHub</a>).</div>
+    </footer>
+  </div>
+
+  <div id="helpModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h2 id="helpTitle">ヘルプ</h2>
+        <button type="button" id="helpClose" class="modal-close-btn">閉じる</button>
+      </div>
+      <div class="modal-content">
+      <p>このツールでは三菱UFJ信託銀行の国内現物保管型貴金属ETF(The Japan Physical Precious Metals ETF)である金の果実シリーズ(1540.T, 1541.T, 1542.T, 1543.T)の市場価格(東証終値)と理論価額(基準価額)の乖離をチャートとして確認できます。<br>データ更新は18:30ですが<a href="https://x.com/_hirotgr" target="_blank">@_hirotgr</a>のMacが起動していない場合は更新されません。</p>
+      <p>三菱UFJ信託銀行 金の果実シリーズ<a href="https://kikinzoku.tr.mufg.jp/ja/index.html" target="_blank">https://kikinzoku.tr.mufg.jp/ja/index.html</a></p>
+      <h2>市場価格と基準価額についての留意事項</h2>
+      <p>金の果実シリーズは大阪取引所の先物価格を現在価値に割り引いた価額(指標価額)と1口辺りの重量(信託報酬や現物保管などの経費額相当が日々控除される)から算出される値が基準価額(理論価額)となります(詳しくは金の果実シリーズのWebページを参照してください)。</p>
+      <p>いずれの銘柄もマーケットメイカーが<a href="https://www.jpx.co.jp/equities/products/etfs/issues/01-10.html" target="_blank">参入</a>しており、市場での取引価格(市場価格)が基準価額と一致していることが理想です。しかし商品現物ETFに必要となる現物の調達・保管や証券化、出来高の規模などの制約から乖離していることが頻繁にあります。このツールはその乖離状況を可視化します。</p>
+      <p>なお、理論価格のソースである大阪取引所先物価格がロンドン(LBMA)/ニューヨーク(COMEX)/上海(SGE/SHFE)/広州(GFEX)から乖離(プレミアム/ディスカウント)していることもあります。データでしかない株とは異なり、「一物一価」という概念が通用しないことやペーパーアセットと実物資産の価格が乖離していることに留意が必要です。</p>
+      <h2>使い方</h2>
+      <p>銘柄名をクリックすると、中段に市場価格(Price)と理論価額(NAV)のチャートが描画されます。理論価額についてはSMA20,SMA50,SMA100,SMA200も描画されます。<br>価額チャートの下には乖離率チャートが描画されます。</p>
+      <p>マウスホイールで描画の日付範囲の増減、マウスでクリックしたままドラッグで描画範囲をスライドできます。</p>
+      <p>チャート右下のハンドルでチャートサイズの変更ができます。個別チャートはY方向のみのリサイズです。</p>
+
+      <h2>リポジトリ</h2>
+      <p><a href="https://github.com/hirotgr/jppm-etf-dev" target="_blank">https://github.com/hirotgr/jppm-etf-dev</a>
+
+      <h2>ライセンスなど</h2>
+        <ul>
+          <li>このHTMLファイル自体は自由に使用・改変でき、ライセンスに関する制約はありません。</li>
+          <li>TradingViewがApache 2.0ライセンスで提供する<strong>Lightweight Charts™︎</strong>ライブラリを使用しています。ライセンスなどは以下を参照してください。
+            <ul>
+              <li><a href="https://jp.tradingview.com/lightweight-charts/" target="_blank">https://jp.tradingview.com/lightweight-charts/</a></li>
+              <li><a href="https://github.com/tradingview/lightweight-charts" target="_blank">https://github.com/tradingview/lightweight-charts</a></li>
+            </ul>
+          </li>
+          <li><strong>Lightweight Charts™︎</strong>ライブラリ取得のために CDN(<a href="https://cdn.jsdelivr.net/" target="_blank">https://cdn.jsdelivr.net/</a>)への接続性が必要です</li>
+          <li>Googleのフォントライブラリ(<a href="https://fonts.googleapis.com" target="_blank">https://fonts.googleapis.com</a>)への接続性が必要です。</li>
+          <li>GoogleとAdobeが共同開発し、Googleから提供されている Noto Sans JP フォントを使用しています。ライセンスはSIL Open Font License 1.1です。詳しくは以下を参照してください。</li>
+            <ul>
+              <li><a href="https://developers.google.com/fonts/faq?hl=ja" target="_blank">https://developers.google.com/fonts/faq?hl=ja</a></li>
+              <li><a href="https://fonts.google.com/" target="_blank">https://fonts.google.com/</a></li>
+            </ul>
+          </li>
+        </ul>
+        <ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const symbols = [
+      { id: '1540', label: '1540: 純金上場投信' },
+      { id: '1541', label: '1541: 純プラチナ上場投信' },
+      { id: '1542', label: '1542: 純銀上場投信' },
+      { id: '1543', label: '1543: 純パラジウム上場投信' },
+    ];
+    const columns = {
+      price: { '1540': '1540-price', '1541': '1541-price', '1542': '1542-price', '1543': '1543-price' },
+      nav: { '1540': '1540-nav', '1541': '1541-nav', '1542': '1542-nav', '1543': '1543-nav' },
+      dev: { '1540': '1540-dev', '1541': '1541-dev', '1542': '1542-dev', '1543': '1543-dev' },
+    };
+    const OBF_FILE = 'jppm-etf-dev.obf';
+    const OBF_KEY = 'hirotgr';
+
+    const SMA_PERIODS = [20, 50, 100, 200];
+    const SMA_COLORS = {
+      20: '#ff9f43',
+      50: '#2ed573',
+      100: '#1e90ff',
+      200: '#ff4757',
+    };
+
+    const state = {
+      rows: [],
+      latest: null,
+      currentSymbol: '1540',
+      chartsReady: false,
+      chartTop: null,
+      chartBottom: null,
+      priceSeries: null,
+      navSeries: null,
+      devSeries: null,
+      syncReady: false,
+      initialRange: null,
+      priceMap: new Map(),
+      navMap: new Map(),
+      devMap: new Map(),
+      smaSeries: {},
+      smaMaps: {},
+      currentSpan: null,
+      skipSync: false,
+      isDragging: false,
+      dragStartX: 0,
+      dragStartRange: null,
+      dragSpan: null,
+      resizeReady: false,
+      tooltipsReady: false,
+    };
+
+    const statusEl = document.getElementById('status');
+    const tableBody = document.getElementById('latestTable');
+    const lastUpdatedEl = document.getElementById('lastUpdated');
+    const priceContainer = document.getElementById('priceChart');
+const devContainer = document.getElementById('devChart');
+    let topTooltip;
+    let bottomTooltip;
+
+    function setStatus(msg){
+      statusEl.textContent = msg;
+    }
+
+    function base64ToBytes(text){
+      const clean = text.replace(/\s+/g, '');
+      const binary = atob(clean);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++){
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes;
+    }
+
+    function xorBytes(bytes, key){
+      if (!key) throw new Error('XOR key is empty');
+      const keyBytes = new TextEncoder().encode(key);
+      const out = new Uint8Array(bytes.length);
+      for (let i = 0; i < bytes.length; i++){
+        out[i] = bytes[i] ^ keyBytes[i % keyBytes.length];
+      }
+      return out;
+    }
+
+    function decodeObf(text, key){
+      const bytes = base64ToBytes(text);
+      const decoded = xorBytes(bytes, key);
+      return new TextDecoder('utf-8').decode(decoded);
+    }
+
+    function parseCSV(text){
+      const lines = text.trim().split(/\r?\n/);
+      const headerLine = lines.shift();
+      if (!headerLine) {
+        return [];
+      }
+      const headers = headerLine.replace(/^\ufeff/, '').split(',').map(h => h.trim());
+      const parsed = lines.map(line => {
+        const cols = line.split(',');
+        const row = {};
+        headers.forEach((key, colIdx) => {
+          row[key] = (cols[colIdx] ?? '').trim();
+        });
+        return row;
+      }).filter(row => row.Date);
+      return parsed;
+    }
+
+    function toNumber(value){
+      if (value == null) return null;
+      const num = Number(String(value).replace(/,/g, ''));
+      return Number.isFinite(num) ? num : null;
+    }
+
+    function toUTC(dateString){
+      const [y,m,d] = dateString.split('/').map(Number);
+      if (!y || !m || !d) return null;
+      return Math.floor(Date.UTC(y, m - 1, d) / 1000);
+    }
+
+    function fmtNumber(value, digits = 2){
+      if (value == null || Number.isNaN(value)) return '-';
+      return Number(value).toLocaleString('ja-JP', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    }
+
+    function fmtInteger(value){
+      if (value == null || Number.isNaN(value)) return '-';
+      return Math.round(Number(value)).toLocaleString('ja-JP');
+    }
+
+    function pad2(value){
+      return String(value).padStart(2, '0');
+    }
+
+    function formatTimestamp(ts){
+      if (ts == null) return '';
+      const d = new Date(ts * 1000);
+      return `${d.getUTCFullYear()}/${pad2(d.getUTCMonth() + 1)}/${pad2(d.getUTCDate())}`;
+    }
+
+    function formatDateLabel(time){
+      if (typeof time === 'number') return formatTimestamp(time);
+      if (time && typeof time === 'object' && 'year' in time){
+        return `${time.year}/${pad2(time.month)}/${pad2(time.day)}`;
+      }
+      return '';
+    }
+
+    function normalizeTime(time){
+      if (typeof time === 'number') return time;
+      if (time && typeof time === 'object' && 'year' in time){
+        return Math.floor(Date.UTC(time.year, time.month - 1, time.day) / 1000);
+      }
+      return null;
+    }
+
+    function renderLatestTable(){
+      if (!state.latest) return;
+      lastUpdatedEl.textContent = `最終更新日: ${state.latest.Date}`;
+      tableBody.innerHTML = '';
+      symbols.forEach(({ id, label }) => {
+        const price = state.latest[columns.price[id]];
+        const nav = state.latest[columns.nav[id]];
+        const dev = state.latest[columns.dev[id]];
+        const tr = document.createElement('tr');
+        const btnTd = document.createElement('td');
+        const btn = document.createElement('button');
+        btn.textContent = label;
+        btn.type = 'button';
+        btn.className = 'symbol-btn' + (state.currentSymbol === id ? ' active' : '');
+        btn.dataset.symbol = id;
+        btn.addEventListener('click', () => updateSymbol(id));
+        btnTd.appendChild(btn);
+        tr.appendChild(btnTd);
+        const priceTd = document.createElement('td');
+        priceTd.textContent = fmtNumber(price, 0);
+        tr.appendChild(priceTd);
+        const navTd = document.createElement('td');
+        navTd.textContent = fmtNumber(nav, 2);
+        tr.appendChild(navTd);
+        const devTd = document.createElement('td');
+        devTd.textContent = fmtNumber(dev, 2) + '%';
+        tr.appendChild(devTd);
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function buildSeriesData(symbolId){
+      const priceKey = columns.price[symbolId];
+      const navKey = columns.nav[symbolId];
+      const devKey = columns.dev[symbolId];
+      const priceData = [];
+      const navData = [];
+      const devData = [];
+      state.rows.forEach(row => {
+        const time = row.__time;
+        if (!time) return;
+        const price = toNumber(row[priceKey]);
+        const nav = toNumber(row[navKey]);
+        const dev = toNumber(row[devKey]);
+        if (price != null) priceData.push({ time, value: price });
+        if (nav != null) navData.push({ time, value: nav });
+        if (dev != null) {
+          const color = dev < 0 ? '#ff6b6b' : '#54d39c';
+          devData.push({ time, value: dev, color });
+        }
+      });
+      return { priceData, navData, devData };
+    }
+
+    function computeSMA(data, period){
+      if (!Array.isArray(data) || data.length === 0) return [];
+      const result = [];
+      const window = [];
+      let sum = 0;
+      for (const point of data){
+        const value = point.value;
+        if (value == null) {
+          window.push(null);
+        } else {
+          window.push(value);
+          sum += value;
+        }
+        if (window.length > period){
+          const removed = window.shift();
+          if (removed != null) sum -= removed;
+        }
+        if (window.length === period){
+          result.push({ time: point.time, value: sum / period });
+        }
+      }
+      return result;
+    }
+
+    function initCharts(){
+      if (state.chartsReady) return;
+      state.chartTop = LightweightCharts.createChart(priceContainer, {
+        ...commonChartOptions(),
+        rightPriceScale: { scaleMargins: { top: 0.02, bottom: 0.02 }, borderVisible:false },
+      });
+      state.chartBottom = LightweightCharts.createChart(devContainer, {
+        ...commonChartOptions(),
+        rightPriceScale: { scaleMargins: { top: 0.1, bottom: 0.1 }, borderVisible:false },
+        timeScale: {
+          borderVisible:false,
+          timeVisible:false,
+          tickMarkFormatter:(time)=>formatDateLabel(time),
+          minBarSpacing:0.15,
+        },
+        handleScroll:{ mouseWheel:false, pressedMouseMove:false },
+        handleScale:{ mouseWheel:true, pinch:true },
+      });
+      state.priceSeries = state.chartTop.addLineSeries({ color:'#6aa0ff', lineWidth:2 });
+      state.navSeries = state.chartTop.addLineSeries({ color:'#f4d35e', lineWidth:2 });
+      SMA_PERIODS.forEach(period => {
+      state.smaSeries[period] = state.chartTop.addLineSeries({
+          color: SMA_COLORS[period] || '#ffffff',
+          lineWidth: 1,
+          lastValueVisible: false,
+          priceLineVisible: false,
+          crosshairMarkerVisible: false,
+        });
+        state.smaMaps[period] = new Map();
+      });
+      state.devSeries = state.chartBottom.addHistogramSeries({ color:'#54d39c', base:0, priceFormat:{ type:'custom', formatter:v=>`${v.toFixed(2)}%` } });
+      syncCharts();
+      setupTooltips();
+      setupResizeObservers();
+      setupDragHandlers();
+      state.chartsReady = true;
+    }
+
+    function commonChartOptions(){
+      return {
+        layout:{ background:{ color: 'transparent' }, textColor: '#cbd5e1', fontFamily:'"Noto Sans JP", sans-serif' },
+        grid:{ vertLines:{ color:'rgba(255,255,255,0.04)' }, horzLines:{ color:'rgba(255,255,255,0.04)' } },
+        rightPriceScale:{ borderVisible:false },
+        timeScale:{
+          borderVisible:false,
+          timeVisible:false,
+          tickMarkFormatter:(time)=>formatDateLabel(time),
+          minBarSpacing:0.15,
+        },
+        handleScroll:{ mouseWheel:false, pressedMouseMove:false },
+        handleScale:{ mouseWheel:true, pinch:true },
+        crosshair:{ mode: LightweightCharts.CrosshairMode.Normal },
+        localization:{
+          dateFormat:'yyyy/MM/dd',
+          timeFormatter:(ts)=>formatTimestamp(ts),
+        },
+      };
+    }
+
+    function syncCharts(){
+      const tsTop = state.chartTop.timeScale();
+      const tsBottom = state.chartBottom.timeScale();
+      const handler = (range) => {
+        if (!state.syncReady || state.skipSync) return;
+        if (!range || range.from == null || range.to == null) return;
+        applyRange(range);
+      };
+      tsTop.subscribeVisibleTimeRangeChange(handler);
+      tsBottom.subscribeVisibleTimeRangeChange(handler);
+    }
+
+    function updateSymbol(symbolId){
+      state.currentSymbol = symbolId;
+      renderLatestTable();
+      if (!state.chartsReady) return;
+      const { priceData, navData, devData } = buildSeriesData(symbolId);
+      state.priceMap = new Map(priceData.map(pt => [pt.time, pt.value]));
+      state.navMap = new Map(navData.map(pt => [pt.time, pt.value]));
+      state.devMap = new Map(devData.map(pt => [pt.time, pt.value]));
+      SMA_PERIODS.forEach(period => state.smaMaps[period].clear());
+      state.syncReady = false;
+      state.priceSeries.setData(priceData);
+      state.navSeries.setData(navData);
+      if (devData.length) {
+        const lastPoint = devData[devData.length - 1];
+        const dummyTime = lastPoint.time + 24 * 60 * 60;
+        devData.push({
+          time: dummyTime,
+          value: 0,
+          color: 'rgba(0,0,0,0)',
+          barWidth: 0,
+        });
+      }
+      state.devSeries.setData(devData);
+      SMA_PERIODS.forEach(period => {
+        const smaData = computeSMA(navData, period);
+        state.smaSeries[period].setData(smaData);
+        state.smaMaps[period] = new Map(smaData.map(pt => [pt.time, pt.value]));
+      });
+      setInitialRange(priceData);
+      setStatus(`${symbols.find(s => s.id === symbolId)?.label || symbolId} を表示中`);
+    }
+
+    function setInitialRange(priceData){
+      if (!priceData.length) return;
+      const last = priceData[priceData.length - 1].time;
+      const extraDays = 1;
+      const extraSeconds = extraDays * 24 * 60 * 60;
+      const lastExtended = last + extraSeconds;
+      const yearAgo = last - 365 * 24 * 60 * 60;
+      state.initialRange = {
+        from: priceData[0].time,
+        to: lastExtended,
+      };
+      const firstCandidate = priceData.find(point => point.time >= yearAgo) || priceData[0];
+      const range = { from: firstCandidate.time, to: lastExtended };
+      applyRange(range);
+      state.syncReady = true;
+    }
+
+    function clampRangeWithSpan(range, targetSpan){
+      if (!range || range.from == null || range.to == null) return null;
+      if (!state.initialRange) return range;
+      const min = state.initialRange.from;
+      const max = state.initialRange.to;
+      const totalSpan = max - min;
+      let span = targetSpan ?? (range.to - range.from);
+      if (!Number.isFinite(span) || span <= 0) span = totalSpan;
+      if (span > totalSpan) span = totalSpan;
+      if (totalSpan <= 0) return { from: min, to: max };
+      let from = range.from;
+      let to = from + span;
+      if (from < min) {
+        from = min;
+        to = from + span;
+      }
+      if (to > max) {
+        to = max;
+        from = to - span;
+      }
+      from = Math.max(min, Math.min(from, max - span));
+      to = from + span;
+      return { from, to };
+    }
+
+
+    function applyRange(range, targetSpan){
+      if (!state.chartTop || !state.chartBottom) return null;
+      const clamped = clampRangeWithSpan(range, targetSpan);
+      if (!clamped) return null;
+      state.skipSync = true;
+      state.chartTop.timeScale().setVisibleRange(clamped);
+      state.chartBottom.timeScale().setVisibleRange(clamped);
+      state.skipSync = false;
+      state.currentSpan = clamped.to - clamped.from;
+      return clamped;
+    }
+
+    function setupTooltips(){
+      if (state.tooltipsReady) return;
+      if (!topTooltip) topTooltip = createTooltip(priceContainer);
+      if (!bottomTooltip) bottomTooltip = createTooltip(devContainer);
+      state.chartTop.subscribeCrosshairMove(handleTopCrosshair);
+      state.chartBottom.subscribeCrosshairMove(handleBottomCrosshair);
+      priceContainer.addEventListener('mouseleave', hideAllTooltips);
+      devContainer.addEventListener('mouseleave', hideAllTooltips);
+      state.tooltipsReady = true;
+    }
+
+    function handleTopCrosshair(param){
+      if (!param || !param.time || !param.point) {
+        hideAllTooltips();
+        return;
+      }
+      const time = normalizeTime(param.time);
+      if (!time) { hideAllTooltips(); return; }
+      const priceValue = param.seriesData?.get?.(state.priceSeries)?.value ?? state.priceMap.get(time);
+      const navValue = param.seriesData?.get?.(state.navSeries)?.value ?? state.navMap.get(time);
+      showTopTooltip(time, priceValue, navValue, param.point);
+      const devValue = state.devMap.get(time);
+      const bottomPoint = {
+        x: state.chartBottom.timeScale().timeToCoordinate(time),
+        y: devValue != null ? state.devSeries.priceToCoordinate(devValue) : null,
+      };
+      showBottomTooltip(time, devValue, bottomPoint);
+    }
+
+    function handleBottomCrosshair(param){
+      if (!param || !param.time || !param.point) {
+        hideAllTooltips();
+        return;
+      }
+      const time = normalizeTime(param.time);
+      if (!time) { hideAllTooltips(); return; }
+      const devValue = param.seriesData?.get?.(state.devSeries)?.value ?? state.devMap.get(time);
+      showBottomTooltip(time, devValue, param.point);
+      const priceValue = state.priceMap.get(time);
+      const navValue = state.navMap.get(time);
+      const topPoint = {
+        x: state.chartTop.timeScale().timeToCoordinate(time),
+        y: priceValue != null ? state.priceSeries.priceToCoordinate(priceValue) : null,
+      };
+      showTopTooltip(time, priceValue, navValue, topPoint);
+    }
+
+    function createTooltip(container){
+      const el = document.createElement('div');
+      el.className = 'chart-tooltip';
+      container.appendChild(el);
+      return el;
+    }
+
+    function showTopTooltip(time, priceValue, navValue, point){
+      if (!topTooltip || (priceValue == null && navValue == null)) {
+        hideTopTooltip();
+        return;
+      }
+      let rows = `
+        <div class="value"><span><span class="swatch" style="background:#6aa0ff"></span>Price</span><span>${fmtNumber(priceValue, 0)}</span></div>
+        <div class="value"><span><span class="swatch" style="background:#f4d35e"></span>NAV</span><span>${fmtNumber(navValue, 2)}</span></div>
+      `;
+      SMA_PERIODS.forEach(period => {
+        const value = state.smaMaps[period]?.get(time);
+        if (value != null) {
+          rows += `
+            <div class="value"><span><span class="swatch" style="background:${SMA_COLORS[period] || '#ffffff'}"></span>SMA${period}</span><span>${fmtInteger(value)}</span></div>
+          `;
+        }
+      });
+      topTooltip.innerHTML = `
+        <div class="date">${formatTimestamp(time)}</div>
+        ${rows}
+      `;
+      positionTooltip(topTooltip, priceContainer, point);
+    }
+
+    function showBottomTooltip(time, devValue, point){
+      if (!bottomTooltip || devValue == null) {
+        hideBottomTooltip();
+        return;
+      }
+      const color = devValue < 0 ? '#ff6b6b' : '#54d39c';
+      bottomTooltip.innerHTML = `
+        <div class="date">${formatTimestamp(time)}</div>
+        <div class="value"><span><span class="swatch" style="background:${color}"></span>Deviation</span><span>${fmtNumber(devValue, 2)}%</span></div>
+      `;
+      positionTooltip(bottomTooltip, devContainer, point);
+    }
+
+    function positionTooltip(el, container, point){
+      if (!el || !container) return;
+      el.style.display = 'block';
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      const tipWidth = el.offsetWidth;
+      const tipHeight = el.offsetHeight;
+      let left = (point?.x ?? (width - tipWidth - 8)) + 12;
+      let top = (point?.y ?? 12) + 12;
+      if (left + tipWidth > width - 6) left = Math.max(6, width - tipWidth - 6);
+      if (left < 6) left = 6;
+      if (top + tipHeight > height - 6) top = Math.max(6, height - tipHeight - 6);
+      if (top < 6) top = 6;
+      el.style.left = `${left}px`;
+      el.style.top = `${top}px`;
+    }
+
+    function hideTopTooltip(){
+      if (topTooltip) topTooltip.style.display = 'none';
+    }
+
+    function hideBottomTooltip(){
+      if (bottomTooltip) bottomTooltip.style.display = 'none';
+    }
+
+    function hideAllTooltips(){
+      hideTopTooltip();
+      hideBottomTooltip();
+    }
+
+    function setupResizeObservers(){
+      if (state.resizeReady) return;
+      if (typeof ResizeObserver === 'undefined') {
+        state.resizeReady = true;
+        return;
+      }
+      if (!priceContainer || !devContainer) return;
+      const topObserver = new ResizeObserver(entries => {
+        for (const entry of entries) {
+          const { width, height } = entry.contentRect;
+          if (!state.chartTop) continue;
+          if (width > 0 && height > 0) {
+            state.chartTop.applyOptions({ width: Math.floor(width), height: Math.floor(height) });
+            const range = state.chartTop.timeScale().getVisibleRange();
+            if (range) applyRange(range);
+          }
+        }
+      });
+      const bottomObserver = new ResizeObserver(entries => {
+        for (const entry of entries) {
+          const { width, height } = entry.contentRect;
+          if (!state.chartBottom) continue;
+          if (width > 0 && height > 0) {
+            state.chartBottom.applyOptions({ width: Math.floor(width), height: Math.floor(height) });
+            const range = state.chartBottom.timeScale().getVisibleRange();
+            if (range) applyRange(range);
+          }
+        }
+      });
+      topObserver.observe(priceContainer);
+      bottomObserver.observe(devContainer);
+      state.resizeReady = true;
+    }
+
+    function setupDragHandlers(){
+      const startDrag = (event) => {
+        if (event.button !== 0) return;
+        const rect = event.currentTarget.getBoundingClientRect();
+        const localX = event.clientX - rect.left;
+        const localY = event.clientY - rect.top;
+        if ((rect.width - localX) <= 18 && (rect.height - localY) <= 18) {
+          return;
+        }
+        const range = state.chartTop.timeScale().getVisibleRange();
+        if (!range) return;
+        event.preventDefault();
+        state.isDragging = true;
+        state.dragStartX = event.clientX;
+        state.dragStartRange = range;
+        state.dragSpan = state.currentSpan ?? (range.to - range.from);
+      };
+      const moveDrag = (event) => {
+        if (!state.isDragging || !state.dragStartRange) return;
+        event.preventDefault();
+        const rect = priceContainer.getBoundingClientRect();
+        const width = rect.width || 1;
+        if (width <= 0) return;
+        const deltaX = event.clientX - state.dragStartX;
+        const span = state.dragSpan || (state.dragStartRange.to - state.dragStartRange.from);
+        if (!span || span <= 0) return;
+        const deltaTime = (deltaX / width) * span;
+        const newRange = {
+          from: state.dragStartRange.from - deltaTime,
+          to: state.dragStartRange.to - deltaTime,
+        };
+        applyRange(newRange, span);
+      };
+      const endDrag = () => {
+        if (!state.isDragging) return;
+        state.isDragging = false;
+        state.dragStartRange = null;
+      };
+      priceContainer.addEventListener('pointerdown', startDrag);
+      devContainer.addEventListener('pointerdown', startDrag);
+      window.addEventListener('pointermove', moveDrag);
+      window.addEventListener('pointerup', endDrag);
+      window.addEventListener('pointerleave', endDrag);
+    }
+
+
+    async function loadData(){
+      try {
+        setStatus('jppm-etf-dev.obf を取得中...');
+        const res = await fetch(OBF_FILE, { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const text = await res.text();
+        const csvText = decodeObf(text, OBF_KEY);
+        const rows = parseCSV(csvText);
+        if (!rows.length) throw new Error('CSVにデータがありません');
+        rows.forEach(row => { row.__time = toUTC(row.Date); });
+        state.rows = rows.filter(r => r.__time != null);
+        state.latest = state.rows[state.rows.length - 1];
+        renderLatestTable();
+        initCharts();
+        updateSymbol(state.currentSymbol);
+        setStatus('チャートを表示しました');
+      } catch (err) {
+        console.error(err);
+        setStatus('読み込み中にエラーが発生しました: ' + (err?.message || err));
+        tableBody.innerHTML = '<tr><td colspan="4" style="color:#ff7b7b">データ取得に失敗しました</td></tr>';
+      }
+    }
+
+    function setupModal(){
+      const modal = document.getElementById('helpModal');
+      const btn = document.getElementById('helpBtn');
+      const closeBtn = document.getElementById('helpClose');
+      function open(){ modal.classList.add('open'); }
+      function close(){ modal.classList.remove('open'); }
+      btn.addEventListener('click', open);
+      closeBtn.addEventListener('click', close);
+      modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    setupModal();
+    loadData();
+  });
+</script>
+</body>
+</html>
