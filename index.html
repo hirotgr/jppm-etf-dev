@@ -56,8 +56,10 @@
     .chart-tooltip .value{display:flex;justify-content:space-between;gap:10px;align-items:center}
     .chart-tooltip .swatch{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:6px}
     footer{margin-top:24px;text-align:center;color:#9fb0c3;font-size:12px}
-    .help-btn{margin-left:auto;border:1px solid #2a3443;background:#152033;color:var(--text);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer}
+    .help-btn{border:1px solid #2a3443;background:#152033;color:var(--text);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer}
     .help-btn:hover{background:#1b2738;border-color:#3a4960}
+    .link-btn{ margin-left:auto; border:1px solid #2a3443; background:#152033; color:#6aa0ff; border-radius:8px; padding:6px 10px; font-size:13px; text-decoration:none; cursor:pointer; }
+    .link-btn:hover{ background:#1b2738; border-color:#3a4960; }
     .modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:9999}
     .modal.open{display:flex}
     .modal-panel{width:min(520px,92vw);max-height:90vh;background:var(--panel);border-radius:12px;border:1px solid #2a3443;box-shadow:0 12px 30px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden}
@@ -72,6 +74,7 @@
   <div class="wrap">
     <header>
       <h1><a href="https://kikinzoku.tr.mufg.jp/ja/index.html" target="_blank" rel="noopener noreferrer">金の果実シリーズ</a> 乖離率チャート</h1>
+      <a href="https://hirotgr.github.io/public-docs/tools.html" class="link-btn" target="_blank">他のツール</a>
       <button id="helpBtn" class="help-btn" type="button">ヘルプ</button>
     </header>
 
@@ -108,7 +111,7 @@
     </section>
 
     <footer>
-      <div><a href="https://github.com/hirotgr/jppm-etf-dev" target="_blank">jppm-etf-dev</a> version 0.1.7 : created by GPT-5.1-Codex with <a href="https://x.com/_hirotgr" target="_blank" rel="noopener noreferrer">@_hirotgr</a>.</div>
+      <div><a href="https://github.com/hirotgr/jppm-etf-dev" target="_blank">jppm-etf-dev</a> version 0.1.8 : created by GPT-5.1-Codex with <a href="https://x.com/_hirotgr" target="_blank" rel="noopener noreferrer">@_hirotgr</a>.</div>
       <div>powered by <a href="https://jp.tradingview.com/lightweight-charts/" target="_blank" rel="noopener noreferrer">Lightweight Charts™︎ (©TradingView)</a>, License: Apache2.0 (see LICENSE and NOTICE on <a href="https://github.com/tradingview/lightweight-charts" target="_blank" rel="noopener noreferrer">GitHub</a>).</div>
     </footer>
   </div>
