@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>金の果実シリーズ 乖離率チャート</title>
   <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&amp;display=swap" rel="stylesheet">
   <style>
     :root{ --bg:#0b0f14; --panel:#111720; --text:#e8eef6; --muted:#9fb0c3; --accent:#6aa0ff; }
     *{box-sizing:border-box}
@@ -27,18 +27,19 @@
     .status-card{font-size:13px;color:var(--muted)}
     .charts{
       display:grid;
-      grid-template-rows:1fr auto;
+      grid-template-rows:auto auto auto;
       gap:8px;
       margin-top:12px;
       resize:both;
       overflow:hidden;
       min-width:320px;
-      min-height:360px;
+      min-height:620px;
       padding-right:14px;
       padding-bottom:14px;
       box-sizing:border-box;
+      font-size:13px;
     }
-    #priceChart,#devChart{
+    #priceChart,#unitChart,#devChart{
       min-height:220px;
       height:420px;
       width:100%;
@@ -49,8 +50,8 @@
       box-sizing:border-box;
       position:relative;
     }
-    #priceChart>div,#devChart>div{overflow:visible!important}
-    #devChart{height:240px}
+    #priceChart>div,#unitChart>div,#devChart>div{overflow:visible!important}
+    #unitChart,#devChart{height:240px}
     .chart-tooltip{position:absolute;display:none;pointer-events:none;background:#0f141c;color:var(--text);border:1px solid #2a3443;border-radius:8px;padding:6px 10px;font-size:12px;box-shadow:0 6px 18px rgba(0,0,0,.35);min-width:110px;z-index:50}
     .chart-tooltip .date{font-weight:600;font-size:12px;margin-bottom:4px}
     .chart-tooltip .value{display:flex;justify-content:space-between;gap:10px;align-items:center}
@@ -67,14 +68,14 @@
     .modal-header h2{margin:0;font-size:16px}
     .modal-close-btn{border:1px solid #2a3443;background:#152033;color:var(--text);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer}
     .modal-close-btn:hover{background:#1b2738;border-color:#3a4960}
-    .modal-content{padding:16px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+    .modal-content{padding:16px;overflow:auto;display:flex;flex-direction:column;gap:12px;font-size:14px}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <h1><a href="https://kikinzoku.tr.mufg.jp/ja/index.html" target="_blank" rel="noopener noreferrer">金の果実シリーズ</a> 乖離率チャート</h1>
-      <a href="https://hirotgr.github.io/public-docs/tools.html" class="link-btn" target="_blank">他のツール</a>
+      <a href="https://hirotgr.github.io/public-docs/tools.html" class="link-btn" target="_blank" rel="noopener noreferrer">他のツール</a>
       <button id="helpBtn" class="help-btn" type="button">ヘルプ</button>
     </header>
 
@@ -106,12 +107,16 @@
     </section>
 
     <section class="charts">
+      &nbsp;&nbsp;Price vs. NAV
       <div id="priceChart" class="panel" aria-label="ETF 価額チャート"></div>
+      &nbsp;&nbsp;設定口数
+      <div id="unitChart" class="panel" aria-label="ETF 口数チャート"></div>
+      &nbsp;&nbsp;乖離率
       <div id="devChart" class="panel" aria-label="ETF 乖離率チャート"></div>
     </section>
 
     <footer>
-      <div><a href="https://github.com/hirotgr/jppm-etf-dev" target="_blank">jppm-etf-dev</a> version 0.1.8 : created by GPT-5.1-Codex with <a href="https://x.com/_hirotgr" target="_blank" rel="noopener noreferrer">@_hirotgr</a>.</div>
+      <div><a href="https://github.com/hirotgr/jppm-etf-dev" target="_blank" rel="noopener noreferrer">jppm-etf-dev</a> version 0.2.0 : created by GPT-5.1-Codex and updated by GPT-5.5 with <a href="https://x.com/_hirotgr" target="_blank" rel="noopener noreferrer">@_hirotgr</a>.</div>
       <div>powered by <a href="https://jp.tradingview.com/lightweight-charts/" target="_blank" rel="noopener noreferrer">Lightweight Charts™︎ (©TradingView)</a>, License: Apache2.0 (see LICENSE and NOTICE on <a href="https://github.com/tradingview/lightweight-charts" target="_blank" rel="noopener noreferrer">GitHub</a>).</div>
     </footer>
   </div>
@@ -123,39 +128,38 @@
         <button type="button" id="helpClose" class="modal-close-btn">閉じる</button>
       </div>
       <div class="modal-content">
-      <p>このツールでは三菱UFJ信託銀行の国内現物保管型貴金属ETF(The Japan Physical Precious Metals ETF)である金の果実シリーズ(1540.T, 1541.T, 1542.T, 1543.T)の市場価格(東証終値)と理論価額(基準価額)の乖離をチャートとして確認できます。<br>データ更新は18:30ですが<a href="https://x.com/_hirotgr" target="_blank">@_hirotgr</a>のMacが起動していない場合は更新されません。</p>
-      <p>三菱UFJ信託銀行 金の果実シリーズ<a href="https://kikinzoku.tr.mufg.jp/ja/index.html" target="_blank">https://kikinzoku.tr.mufg.jp/ja/index.html</a></p>
+      <p>このツールでは三菱UFJ信託銀行＋三菱UFJアセットマネジメントによる国内現物保管型貴金属ETF(The Japan Physical Precious Metals ETF)である金の果実シリーズ(1540.T, 1541.T, 1542.T, 1543.T)の市場価格(東証終値/Price)と理論価額(基準価額/NAV)、ETF設定口数、PriceとNAVの乖離率をチャートとして確認できます。<br>データ更新は18:30ですが<a href="https://x.com/_hirotgr" target="_blank" rel="noopener noreferrer">@_hirotgr</a>のMacが起動していない場合は更新されません。</p>
+      <p>三菱UFJ信託銀行 金の果実シリーズ<a href="https://kikinzoku.tr.mufg.jp/ja/index.html" target="_blank" rel="noopener noreferrer">https://kikinzoku.tr.mufg.jp/ja/index.html</a></p>
       <h2>市場価格と基準価額についての留意事項</h2>
       <p>金の果実シリーズは大阪取引所の先物価格を現在価値に割り引いた価額(指標価額)と1口辺りの重量(信託報酬や現物保管などの経費額相当が日々控除される)から算出される値が基準価額(理論価額)となります(詳しくは金の果実シリーズのWebページを参照してください)。</p>
-      <p>いずれの銘柄もマーケットメイカーが<a href="https://www.jpx.co.jp/equities/products/etfs/issues/01-10.html" target="_blank">参入</a>しており、市場での取引価格(市場価格)が基準価額と一致していることが理想です。しかし商品現物ETFに必要となる現物の調達・保管や証券化、出来高の規模などの制約から乖離していることが頻繁にあります。このツールはその乖離状況を可視化します。</p>
-      <p>なお、理論価格のソースである大阪取引所先物価格がロンドン(LBMA)/ニューヨーク(COMEX)/上海(SGE/SHFE)/広州(GFEX)から乖離(プレミアム/ディスカウント)していることもあります。データでしかない株とは異なり、「一物一価」という概念が通用しないことやペーパーアセットと実物資産の価格が乖離していることに留意が必要です。</p>
+      <p>いずれの銘柄もマーケットメイカーが<a href="https://www.jpx.co.jp/equities/products/etfs/issues/01-10.html" target="_blank" rel="noopener noreferrer">参入</a>しており、市場での取引価格(市場価格)が基準価額と一致していることが理想です。しかし商品現物ETFに必要となる現物の調達・保管や証券化、出来高の規模などの制約から乖離していることが頻繁にあります。このツールはその乖離状況を可視化します。</p>
+      <p>なお、理論価格のソースである大阪取引所先物価格がロンドン(LBMA)/ニューヨーク(COMEX)/上海(SGE/SHFE)/広州(GFEX)から乖離(プレミアム/ディスカウント)している場合があります。電子データでしかない株とは異なり、「一物一価」という概念が通用しないことやペーパーアセットと実物資産の価格が乖離していることに留意が必要です。</p>
       <h2>使い方</h2>
-      <p>銘柄名をクリックすると、中段に市場価格(Price)と理論価額(NAV)のチャートが描画されます。理論価額についてはSMA20,SMA50,SMA100,SMA200も描画されます。<br>価額チャートの下には乖離率チャートが描画されます。</p>
+      <p>銘柄名をクリックすると、上段に市場価格(Price)と理論価額(NAV)のチャートが描画されます。理論価額についてはSMA20,SMA50,SMA100,SMA200も描画されます。<br>中段にはETFの設定口数チャート、下段には乖離率チャートが描画されます。</p>
       <p>マウスホイールで描画の日付範囲の増減、マウスでクリックしたままドラッグで描画範囲をスライドできます。</p>
-      <p>チャート右下のハンドルでチャートサイズの変更ができます。個別チャートはY方向のみのリサイズです。</p>
+      <p>チャート右下のリサイズ・ハンドルでチャート・サイズの変更ができます。個別チャートはY方向のみのリサイズです。</p>
 
       <h2>リポジトリ</h2>
-      <p><a href="https://github.com/hirotgr/jppm-etf-dev" target="_blank">https://github.com/hirotgr/jppm-etf-dev</a>
+      <p><a href="https://github.com/hirotgr/jppm-etf-dev" target="_blank" rel="noopener noreferrer">https://github.com/hirotgr/jppm-etf-dev</a></p>
 
       <h2>ライセンスなど</h2>
         <ul>
           <li>このHTMLファイル自体は自由に使用・改変でき、ライセンスに関する制約はありません。</li>
           <li>TradingViewがApache 2.0ライセンスで提供する<strong>Lightweight Charts™︎</strong>ライブラリを使用しています。ライセンスなどは以下を参照してください。
             <ul>
-              <li><a href="https://jp.tradingview.com/lightweight-charts/" target="_blank">https://jp.tradingview.com/lightweight-charts/</a></li>
-              <li><a href="https://github.com/tradingview/lightweight-charts" target="_blank">https://github.com/tradingview/lightweight-charts</a></li>
+              <li><a href="https://jp.tradingview.com/lightweight-charts/" target="_blank" rel="noopener noreferrer">https://jp.tradingview.com/lightweight-charts/</a></li>
+              <li><a href="https://github.com/tradingview/lightweight-charts" target="_blank" rel="noopener noreferrer">https://github.com/tradingview/lightweight-charts</a></li>
             </ul>
           </li>
-          <li><strong>Lightweight Charts™︎</strong>ライブラリ取得のために CDN(<a href="https://cdn.jsdelivr.net/" target="_blank">https://cdn.jsdelivr.net/</a>)への接続性が必要です</li>
-          <li>Googleのフォントライブラリ(<a href="https://fonts.googleapis.com" target="_blank">https://fonts.googleapis.com</a>)への接続性が必要です。</li>
-          <li>GoogleとAdobeが共同開発し、Googleから提供されている Noto Sans JP フォントを使用しています。ライセンスはSIL Open Font License 1.1です。詳しくは以下を参照してください。</li>
+          <li><strong>Lightweight Charts™︎</strong>ライブラリ取得のために CDN(<a href="https://cdn.jsdelivr.net/" target="_blank" rel="noopener noreferrer">https://cdn.jsdelivr.net/</a>)への接続性が必要です</li>
+          <li>Googleのフォントライブラリ(<a href="https://fonts.googleapis.com" target="_blank" rel="noopener noreferrer">https://fonts.googleapis.com</a>)への接続性が必要です。</li>
+          <li>GoogleとAdobeが共同開発し、Googleから提供されている Noto Sans JP フォントを使用しています。ライセンスはSIL Open Font License 1.1です。詳しくは以下を参照してください。
             <ul>
-              <li><a href="https://developers.google.com/fonts/faq?hl=ja" target="_blank">https://developers.google.com/fonts/faq?hl=ja</a></li>
-              <li><a href="https://fonts.google.com/" target="_blank">https://fonts.google.com/</a></li>
+              <li><a href="https://developers.google.com/fonts/faq?hl=ja" target="_blank" rel="noopener noreferrer">https://developers.google.com/fonts/faq?hl=ja</a></li>
+              <li><a href="https://fonts.google.com/" target="_blank" rel="noopener noreferrer">https://fonts.google.com/</a></li>
             </ul>
           </li>
         </ul>
-        <ul>
       </div>
     </div>
   </div>
@@ -171,6 +175,7 @@
       price: { '1540': '1540-price', '1541': '1541-price', '1542': '1542-price', '1543': '1543-price' },
       nav: { '1540': '1540-nav', '1541': '1541-nav', '1542': '1542-nav', '1543': '1543-nav' },
       dev: { '1540': '1540-dev', '1541': '1541-dev', '1542': '1542-dev', '1543': '1543-dev' },
+      unit: { '1540': '1540-unit', '1541': '1541-unit', '1542': '1542-unit', '1543': '1543-unit' },
     };
     const OBF_FILE = 'jppm-etf-dev.obf';
     const OBF_KEY = 'hirotgr';
@@ -189,19 +194,23 @@
       currentSymbol: '1540',
       chartsReady: false,
       chartTop: null,
+      chartMiddle: null,
       chartBottom: null,
       priceSeries: null,
       navSeries: null,
+      unitSeries: null,
       devSeries: null,
       syncReady: false,
       initialRange: null,
       priceMap: new Map(),
       navMap: new Map(),
+      unitMap: new Map(),
       devMap: new Map(),
       smaSeries: {},
       smaMaps: {},
       currentSpan: null,
       skipSync: false,
+      skipCrosshairSync: false,
       isDragging: false,
       dragStartX: 0,
       dragStartRange: null,
@@ -214,8 +223,10 @@
     const tableBody = document.getElementById('latestTable');
     const lastUpdatedEl = document.getElementById('lastUpdated');
     const priceContainer = document.getElementById('priceChart');
-const devContainer = document.getElementById('devChart');
+    const unitContainer = document.getElementById('unitChart');
+    const devContainer = document.getElementById('devChart');
     let topTooltip;
+    let middleTooltip;
     let bottomTooltip;
 
     function setStatus(msg){
@@ -288,6 +299,11 @@ const devContainer = document.getElementById('devChart');
       return Math.round(Number(value)).toLocaleString('ja-JP');
     }
 
+    function fmtUnitAxis(value){
+      if (value == null || Number.isNaN(value)) return '-';
+      return `${Math.round(Number(value) / 1000).toLocaleString('ja-JP')}K`;
+    }
+
     function pad2(value){
       return String(value).padStart(2, '0');
     }
@@ -349,8 +365,10 @@ const devContainer = document.getElementById('devChart');
       const priceKey = columns.price[symbolId];
       const navKey = columns.nav[symbolId];
       const devKey = columns.dev[symbolId];
+      const unitKey = columns.unit[symbolId];
       const priceData = [];
       const navData = [];
+      const unitData = [];
       const devData = [];
       state.rows.forEach(row => {
         const time = row.__time;
@@ -358,14 +376,16 @@ const devContainer = document.getElementById('devChart');
         const price = toNumber(row[priceKey]);
         const nav = toNumber(row[navKey]);
         const dev = toNumber(row[devKey]);
+        const unit = toNumber(row[unitKey]);
         if (price != null) priceData.push({ time, value: price });
         if (nav != null) navData.push({ time, value: nav });
+        if (unit != null) unitData.push({ time, value: unit });
         if (dev != null) {
           const color = dev < 0 ? '#ff6b6b' : '#54d39c';
           devData.push({ time, value: dev, color });
         }
       });
-      return { priceData, navData, devData };
+      return { priceData, navData, unitData, devData };
     }
 
     function computeSMA(data, period){
@@ -398,6 +418,10 @@ const devContainer = document.getElementById('devChart');
         ...commonChartOptions(),
         rightPriceScale: { scaleMargins: { top: 0.02, bottom: 0.02 }, borderVisible:false },
       });
+      state.chartMiddle = LightweightCharts.createChart(unitContainer, {
+        ...commonChartOptions(),
+        rightPriceScale: { scaleMargins: { top: 0.1, bottom: 0.1 }, borderVisible:false },
+      });
       state.chartBottom = LightweightCharts.createChart(devContainer, {
         ...commonChartOptions(),
         rightPriceScale: { scaleMargins: { top: 0.1, bottom: 0.1 }, borderVisible:false },
@@ -422,6 +446,7 @@ const devContainer = document.getElementById('devChart');
         });
         state.smaMaps[period] = new Map();
       });
+      state.unitSeries = state.chartMiddle.addLineSeries({ color:'#00d1ff', lineWidth:2, priceFormat:{ type:'custom', formatter:v=>fmtUnitAxis(v) } });
       state.devSeries = state.chartBottom.addHistogramSeries({ color:'#54d39c', base:0, priceFormat:{ type:'custom', formatter:v=>`${v.toFixed(2)}%` } });
       syncCharts();
       setupTooltips();
@@ -453,6 +478,7 @@ const devContainer = document.getElementById('devChart');
 
     function syncCharts(){
       const tsTop = state.chartTop.timeScale();
+      const tsMiddle = state.chartMiddle.timeScale();
       const tsBottom = state.chartBottom.timeScale();
       const handler = (range) => {
         if (!state.syncReady || state.skipSync) return;
@@ -460,6 +486,7 @@ const devContainer = document.getElementById('devChart');
         applyRange(range);
       };
       tsTop.subscribeVisibleTimeRangeChange(handler);
+      tsMiddle.subscribeVisibleTimeRangeChange(handler);
       tsBottom.subscribeVisibleTimeRangeChange(handler);
     }
 
@@ -467,14 +494,16 @@ const devContainer = document.getElementById('devChart');
       state.currentSymbol = symbolId;
       renderLatestTable();
       if (!state.chartsReady) return;
-      const { priceData, navData, devData } = buildSeriesData(symbolId);
+      const { priceData, navData, unitData, devData } = buildSeriesData(symbolId);
       state.priceMap = new Map(priceData.map(pt => [pt.time, pt.value]));
       state.navMap = new Map(navData.map(pt => [pt.time, pt.value]));
+      state.unitMap = new Map(unitData.map(pt => [pt.time, pt.value]));
       state.devMap = new Map(devData.map(pt => [pt.time, pt.value]));
       SMA_PERIODS.forEach(period => state.smaMaps[period].clear());
       state.syncReady = false;
       state.priceSeries.setData(priceData);
       state.navSeries.setData(navData);
+      state.unitSeries.setData(unitData);
       if (devData.length) {
         const lastPoint = devData[devData.length - 1];
         const dummyTime = lastPoint.time + 24 * 60 * 60;
@@ -539,11 +568,12 @@ const devContainer = document.getElementById('devChart');
 
 
     function applyRange(range, targetSpan){
-      if (!state.chartTop || !state.chartBottom) return null;
+      if (!state.chartTop || !state.chartMiddle || !state.chartBottom) return null;
       const clamped = clampRangeWithSpan(range, targetSpan);
       if (!clamped) return null;
       state.skipSync = true;
       state.chartTop.timeScale().setVisibleRange(clamped);
+      state.chartMiddle.timeScale().setVisibleRange(clamped);
       state.chartBottom.timeScale().setVisibleRange(clamped);
       state.skipSync = false;
       state.currentSpan = clamped.to - clamped.from;
@@ -553,25 +583,79 @@ const devContainer = document.getElementById('devChart');
     function setupTooltips(){
       if (state.tooltipsReady) return;
       if (!topTooltip) topTooltip = createTooltip(priceContainer);
+      if (!middleTooltip) middleTooltip = createTooltip(unitContainer);
       if (!bottomTooltip) bottomTooltip = createTooltip(devContainer);
       state.chartTop.subscribeCrosshairMove(handleTopCrosshair);
+      state.chartMiddle.subscribeCrosshairMove(handleMiddleCrosshair);
       state.chartBottom.subscribeCrosshairMove(handleBottomCrosshair);
-      priceContainer.addEventListener('mouseleave', hideAllTooltips);
-      devContainer.addEventListener('mouseleave', hideAllTooltips);
+      priceContainer.addEventListener('mouseleave', handleChartMouseLeave);
+      unitContainer.addEventListener('mouseleave', handleChartMouseLeave);
+      devContainer.addEventListener('mouseleave', handleChartMouseLeave);
       state.tooltipsReady = true;
+    }
+
+    function handleChartMouseLeave(event){
+      const next = event.relatedTarget;
+      const isStillInCharts = next instanceof Node && [priceContainer, unitContainer, devContainer].some(container => container?.contains(next));
+      if (!isStillInCharts) {
+        hideAllTooltips();
+        clearSyncedCrosshairs();
+      }
     }
 
     function handleTopCrosshair(param){
       if (!param || !param.time || !param.point) {
         hideAllTooltips();
+        clearSyncedCrosshairs();
         return;
       }
       const time = normalizeTime(param.time);
-      if (!time) { hideAllTooltips(); return; }
+      if (!time) { hideAllTooltips(); clearSyncedCrosshairs(); return; }
       const priceValue = param.seriesData?.get?.(state.priceSeries)?.value ?? state.priceMap.get(time);
       const navValue = param.seriesData?.get?.(state.navSeries)?.value ?? state.navMap.get(time);
-      showTopTooltip(time, priceValue, navValue, param.point);
+      const unitValue = state.unitMap.get(time);
       const devValue = state.devMap.get(time);
+      syncCrosshairs(time, {
+        top: priceValue,
+        middle: unitValue,
+        bottom: devValue,
+      });
+      showTopTooltip(time, priceValue, navValue, param.point);
+      const middlePoint = {
+        x: state.chartMiddle.timeScale().timeToCoordinate(time),
+        y: unitValue != null ? state.unitSeries.priceToCoordinate(unitValue) : null,
+      };
+      showMiddleTooltip(time, unitValue, middlePoint);
+      const bottomPoint = {
+        x: state.chartBottom.timeScale().timeToCoordinate(time),
+        y: devValue != null ? state.devSeries.priceToCoordinate(devValue) : null,
+      };
+      showBottomTooltip(time, devValue, bottomPoint);
+    }
+
+    function handleMiddleCrosshair(param){
+      if (!param || !param.time || !param.point) {
+        hideAllTooltips();
+        clearSyncedCrosshairs();
+        return;
+      }
+      const time = normalizeTime(param.time);
+      if (!time) { hideAllTooltips(); clearSyncedCrosshairs(); return; }
+      const unitValue = param.seriesData?.get?.(state.unitSeries)?.value ?? state.unitMap.get(time);
+      const priceValue = state.priceMap.get(time);
+      const navValue = state.navMap.get(time);
+      const devValue = state.devMap.get(time);
+      syncCrosshairs(time, {
+        top: priceValue,
+        middle: unitValue,
+        bottom: devValue,
+      });
+      showMiddleTooltip(time, unitValue, param.point);
+      const topPoint = {
+        x: state.chartTop.timeScale().timeToCoordinate(time),
+        y: priceValue != null ? state.priceSeries.priceToCoordinate(priceValue) : null,
+      };
+      showTopTooltip(time, priceValue, navValue, topPoint);
       const bottomPoint = {
         x: state.chartBottom.timeScale().timeToCoordinate(time),
         y: devValue != null ? state.devSeries.priceToCoordinate(devValue) : null,
@@ -582,19 +666,62 @@ const devContainer = document.getElementById('devChart');
     function handleBottomCrosshair(param){
       if (!param || !param.time || !param.point) {
         hideAllTooltips();
+        clearSyncedCrosshairs();
         return;
       }
       const time = normalizeTime(param.time);
-      if (!time) { hideAllTooltips(); return; }
+      if (!time) { hideAllTooltips(); clearSyncedCrosshairs(); return; }
       const devValue = param.seriesData?.get?.(state.devSeries)?.value ?? state.devMap.get(time);
-      showBottomTooltip(time, devValue, param.point);
       const priceValue = state.priceMap.get(time);
       const navValue = state.navMap.get(time);
+      const unitValue = state.unitMap.get(time);
+      syncCrosshairs(time, {
+        top: priceValue,
+        middle: unitValue,
+        bottom: devValue,
+      });
+      showBottomTooltip(time, devValue, param.point);
       const topPoint = {
         x: state.chartTop.timeScale().timeToCoordinate(time),
         y: priceValue != null ? state.priceSeries.priceToCoordinate(priceValue) : null,
       };
       showTopTooltip(time, priceValue, navValue, topPoint);
+      const middlePoint = {
+        x: state.chartMiddle.timeScale().timeToCoordinate(time),
+        y: unitValue != null ? state.unitSeries.priceToCoordinate(unitValue) : null,
+      };
+      showMiddleTooltip(time, unitValue, middlePoint);
+    }
+
+    function setChartCrosshair(chart, series, time, value){
+      if (!chart || !series || value == null || typeof chart.setCrosshairPosition !== 'function') return;
+      chart.setCrosshairPosition(value, time, series);
+    }
+
+    function syncCrosshairs(time, values){
+      if (state.skipCrosshairSync) return;
+      state.skipCrosshairSync = true;
+      try {
+        setChartCrosshair(state.chartTop, state.priceSeries, time, values.top);
+        setChartCrosshair(state.chartMiddle, state.unitSeries, time, values.middle);
+        setChartCrosshair(state.chartBottom, state.devSeries, time, values.bottom);
+      } finally {
+        state.skipCrosshairSync = false;
+      }
+    }
+
+    function clearSyncedCrosshairs(){
+      if (state.skipCrosshairSync) return;
+      state.skipCrosshairSync = true;
+      try {
+        [state.chartTop, state.chartMiddle, state.chartBottom].forEach(chart => {
+          if (chart && typeof chart.clearCrosshairPosition === 'function') {
+            chart.clearCrosshairPosition();
+          }
+        });
+      } finally {
+        state.skipCrosshairSync = false;
+      }
     }
 
     function createTooltip(container){
@@ -641,6 +768,18 @@ const devContainer = document.getElementById('devChart');
       positionTooltip(bottomTooltip, devContainer, point);
     }
 
+    function showMiddleTooltip(time, unitValue, point){
+      if (!middleTooltip || unitValue == null) {
+        hideMiddleTooltip();
+        return;
+      }
+      middleTooltip.innerHTML = `
+        <div class="date">${formatTimestamp(time)}</div>
+        <div class="value"><span><span class="swatch" style="background:#00d1ff"></span>Unit</span><span>${fmtInteger(unitValue)}</span></div>
+      `;
+      positionTooltip(middleTooltip, unitContainer, point);
+    }
+
     function positionTooltip(el, container, point){
       if (!el || !container) return;
       el.style.display = 'block';
@@ -662,12 +801,17 @@ const devContainer = document.getElementById('devChart');
       if (topTooltip) topTooltip.style.display = 'none';
     }
 
+    function hideMiddleTooltip(){
+      if (middleTooltip) middleTooltip.style.display = 'none';
+    }
+
     function hideBottomTooltip(){
       if (bottomTooltip) bottomTooltip.style.display = 'none';
     }
 
     function hideAllTooltips(){
       hideTopTooltip();
+      hideMiddleTooltip();
       hideBottomTooltip();
     }
 
@@ -677,7 +821,7 @@ const devContainer = document.getElementById('devChart');
         state.resizeReady = true;
         return;
       }
-      if (!priceContainer || !devContainer) return;
+      if (!priceContainer || !unitContainer || !devContainer) return;
       const topObserver = new ResizeObserver(entries => {
         for (const entry of entries) {
           const { width, height } = entry.contentRect;
@@ -685,6 +829,17 @@ const devContainer = document.getElementById('devChart');
           if (width > 0 && height > 0) {
             state.chartTop.applyOptions({ width: Math.floor(width), height: Math.floor(height) });
             const range = state.chartTop.timeScale().getVisibleRange();
+            if (range) applyRange(range);
+          }
+        }
+      });
+      const middleObserver = new ResizeObserver(entries => {
+        for (const entry of entries) {
+          const { width, height } = entry.contentRect;
+          if (!state.chartMiddle) continue;
+          if (width > 0 && height > 0) {
+            state.chartMiddle.applyOptions({ width: Math.floor(width), height: Math.floor(height) });
+            const range = state.chartMiddle.timeScale().getVisibleRange();
             if (range) applyRange(range);
           }
         }
@@ -701,6 +856,7 @@ const devContainer = document.getElementById('devChart');
         }
       });
       topObserver.observe(priceContainer);
+      middleObserver.observe(unitContainer);
       bottomObserver.observe(devContainer);
       state.resizeReady = true;
     }
@@ -744,6 +900,7 @@ const devContainer = document.getElementById('devChart');
         state.dragStartRange = null;
       };
       priceContainer.addEventListener('pointerdown', startDrag);
+      unitContainer.addEventListener('pointerdown', startDrag);
       devContainer.addEventListener('pointerdown', startDrag);
       window.addEventListener('pointermove', moveDrag);
       window.addEventListener('pointerup', endDrag);
